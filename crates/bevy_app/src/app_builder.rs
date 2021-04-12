@@ -141,6 +141,10 @@ impl AppBuilder {
         self.add_system_set_to_stage(CoreStage::Update, system_set)
     }
 
+    pub fn add_startup_system_set(&mut self, system_set: SystemSet) -> &mut Self {
+        self.add_system_set_to_stage(CoreStage::Startup, system_set)
+    }
+    
     pub fn add_system_to_stage(
         &mut self,
         stage_label: impl StageLabel,
