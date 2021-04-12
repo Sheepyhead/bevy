@@ -261,6 +261,14 @@ impl Components {
     }
 
     #[inline]
+    pub fn get_resource_ids(&self) -> Vec<ComponentId> {
+        self.resource_indices
+            .values()
+            .map(|index| ComponentId(*index))
+            .collect()
+    }
+
+    #[inline]
     pub fn get_or_insert_resource_id<T: Component>(&mut self) -> ComponentId {
         self.get_or_insert_resource_with(TypeId::of::<T>(), TypeInfo::of::<T>)
     }

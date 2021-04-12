@@ -194,6 +194,29 @@ impl<'w> WorldCell<'w> {
         ))
     }
 
+    pub fn get_resources<T: Component>(&self) -> Vec<WorldBorrow<'_, T>> {
+        let component_ids = self.world.components.get_resource_ids();
+        let resource_archetype = self.world.archetypes.resource();
+        let mut compound_component_ids = vec![];
+        for component_id in component_ids {
+            if let Some(archetype_component_id) =
+                resource_archetype.get_archetype_component_id(component_id)
+            {
+                compound_component_ids.push((component_id, archetype_component_id));
+            }
+        }
+        let mut resources = vec![];
+        for (component_id, archetype_component_id) in compound_component_ids {
+            resources.push(WorldBorrow::new(
+                // SAFE: ComponentId matches TypeId
+                unsafe { self.world.get_resource_with_id(component_id).unwrap() },
+                archetype_component_id,
+                self.access.clone(),
+            ));
+        }
+        resources
+    }
+
     pub fn get_resource_mut<T: Component>(&self) -> Option<WorldBorrowMut<'_, T>> {
         let component_id = self.world.components.get_resource_id(TypeId::of::<T>())?;
         let resource_archetype = self.world.archetypes.resource();
@@ -241,7 +264,7 @@ impl<'w> WorldCell<'w> {
 mod tests {
     use super::BASE_ACCESS;
     use crate::{archetype::ArchetypeId, world::World};
-    use std::any::TypeId;
+    use std::{any::TypeId, intrinsics::assert_inhabited};
 
     #[test]
     fn world_cell() {
@@ -349,5 +372,15 @@ mod tests {
         let cell = world.cell();
         let _value_a = cell.get_resource_mut::<u32>().unwrap();
         let _value_b = cell.get_resource::<u32>().unwrap();
+    }
+
+    #[test]
+    fn world_get_resources() {
+        let mut world = World::default();
+        world.insert_resource(1u32);
+        world.insert_resource(1f32);
+        let cell = world.cell();
+        let resources = cell.get_resources();
+        assert_eq!(resources.len(), 2);
     }
 }

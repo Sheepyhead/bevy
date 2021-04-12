@@ -570,6 +570,11 @@ impl World {
         unsafe { self.get_resource_with_id(component_id) }
     }
 
+    #[inline]
+    pub fn get_resources<T: Component>(&self) -> Vec<&T> {
+        unsafe { self.get_resources() }
+    }
+
     pub fn is_resource_added<T: Component>(&self) -> bool {
         let component_id = self.components.get_resource_id(TypeId::of::<T>()).unwrap();
         let column = self.get_populated_resource_column(component_id).unwrap();
